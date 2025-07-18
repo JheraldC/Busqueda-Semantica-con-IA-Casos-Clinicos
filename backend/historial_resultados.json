@@ -1,0 +1,530 @@
+[
+  {
+    "id": "e43fa852-2779-408a-9abb-1cebe8e04ba1",
+    "timestamp": 1752859877041,
+    "tipoConsulta": "buscar_texto",
+    "consulta": {
+      "texto": "zzz"
+    },
+    "resultado": {
+      "resultados": [
+        {
+          "id": 23,
+          "diagnostico": "Hipotiroidismo primario adquirido con SCFE (epífisis femoral desplazada)",
+          "motivo_consulta": "Dolor de cadera izquierda",
+          "historia_actual": "Niña de 13 años con dolor de cadera izquierda tras jugar netball, marcha antiálgica, baja talla para la edad, no ha iniciado pubertad, intolerancia al frío, constipación crónica",
+          "antecedentes": "Madre con lupus eritematoso sistémico",
+          "edad": "13",
+          "peso": "49.1 kg",
+          "examen_fisico": "Baja talla (<3er percentil), piel amarilla, palidez, cara redondeada, mixedema no depresible, sin bocio",
+          "evolucion": "Mejoría tras tratamiento, aceleración del crecimiento, inicio pubertad",
+          "tratamiento": "Levotiroxina (T4), cirugía de cadera",
+          "especialidad_1": "Endocrinología (Endocrino)",
+          "especialidad_2": "Ortopedia (Ortop.)"
+        },
+        {
+          "id": 43,
+          "diagnostico": "Traumatismo facial cortante por mordedura de perro. Sospecha de celulitis facial.",
+          "motivo_consulta": "Mordedura de perro en zona nasogeniana, excoriaciones en rostro",
+          "historia_actual": "Paciente femenina de 6 años, acude por mordedura en zona facial producida por perro de la familia, hace 16 horas. Madre realizó lavado con agua y jabón y llevó a posta. En hospital recibió curación, vacuna antirrábica intramuscular en deltoides, suero antirrábico en zona facial y glútea, antibióticos. Actualmente con dolor leve (4/10).",
+          "antecedentes": "Prenatales: embarazo bicoriónico, controles completos. Perinatales: llanto inmediato, 2do mellizo. Desarrollo adecuado. Inmunizaciones completas. Enfermedad previa: síndrome de transfusión feto fetal (hospitalización). Sin intervenciones quirúrgicas. Padre, madre y hermano sanos. Casa con 2 perros y 1 gato, sin vacunas.",
+          "edad": "6",
+          "peso": "22.5 kg",
+          "examen_fisico": "Piel: excoriaciones en rostro, heridas cortantes en zona nasogeniana izquierda (6cm), mentón y frente, escoriaciones en zona frontal y mandibular. Peso: 22.5 kg (p58), Talla: 1.23 m (p77), IMC 14.9 (p38), FC 97, FR 20, T° 36.7°C, SATO2 97%. Glasgow 15, sin hallazgos neurológicos ni sistémicos adicionales.",
+          "evolucion": "Paciente estable, con dolor leve en zona de mordedura, evolución favorable tras manejo inicial, pendiente completar esquema de vacunación y control de infección.",
+          "tratamiento": "Vacuna antirrábica IM, suero antirrábico local y glúteo, antibióticos, limpieza de herida cada 12h, dieta completa, vigilancia del animal mordedor",
+          "especialidad_1": "Pediatría",
+          "especialidad_2": "Cirugía pediátrica"
+        },
+        {
+          "id": 79,
+          "diagnostico": "Enfermedad pulmonar obstructiva crónica (EPOC)",
+          "motivo_consulta": "Disnea progresiva y tos crónica",
+          "historia_actual": "Hombre de 61 años, ex-fumador 40 años, tos con expectoración matinal, disnea al caminar",
+          "antecedentes": "Tabaquismo, bronquitis crónica",
+          "edad": "61",
+          "peso": "72",
+          "examen_fisico": "Espirometría obstructiva, tórax hiperinsuflado",
+          "evolucion": "Control sintomático, sin exacerbaciones",
+          "tratamiento": "Broncodilatadores, fisioterapia",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 85,
+          "diagnostico": "Rabdomiólisis por ejercicio extremo",
+          "motivo_consulta": "Debilidad muscular y orina oscura",
+          "historia_actual": "Hombre de 23 años, inició con debilidad y mialgia tras maratón, orina color marrón",
+          "antecedentes": "Sin antecedentes",
+          "edad": "23",
+          "peso": "68",
+          "examen_fisico": "Dolor muscular generalizado, CK elevada",
+          "evolucion": "Recuperación tras hidratación IV",
+          "tratamiento": "Hidratación IV, reposo",
+          "especialidad_1": "Medicina Interna",
+          "especialidad_2": "Nefrología"
+        },
+        {
+          "id": 48,
+          "diagnostico": "Infarto agudo de miocardio sin elevación del ST",
+          "motivo_consulta": "Dolor torácico opresivo de 45 minutos de duración",
+          "historia_actual": "Paciente masculino de 59 años con dolor torácico irradiado a brazo izquierdo, náuseas y sudoración fría. ECG con cambios isquémicos.",
+          "antecedentes": "Hipertensión arterial, dislipidemia, fumador",
+          "edad": "59",
+          "peso": "88",
+          "examen_fisico": "PA: 130/78 mmHg, FC: 98 lpm, sudoración, palidez, sin soplos",
+          "evolucion": "Hospitalizado, recibió manejo invasivo y mejoró",
+          "tratamiento": "DAPT, atorvastatina, metoprolol, heparina",
+          "especialidad_1": "Cardiología",
+          "especialidad_2": "Medicina Interna"
+        }
+      ]
+    }
+  },
+  {
+    "id": "2360f8fb-9efd-42e3-a342-73f7b1772fe4",
+    "timestamp": 1752860012299,
+    "tipoConsulta": "buscar_texto",
+    "consulta": {
+      "texto": "as"
+    },
+    "resultado": {
+      "resultados": [
+        {
+          "id": 62,
+          "diagnostico": "Cirrosis hepática descompensada",
+          "motivo_consulta": "Ascitis y encefalopatía leve",
+          "historia_actual": "Hombre de 58 años, diagnosticado hace 4 años, consulta por abdomen distendido y confusión",
+          "antecedentes": "Consumo de alcohol crónico",
+          "edad": "58",
+          "peso": "74",
+          "examen_fisico": "Ascitis, asterixis, ictericia",
+          "evolucion": "Requiere paracentesis, mejoría de encefalopatía",
+          "tratamiento": "Restricción de sal, lactulosa, espironolactona",
+          "especialidad_1": "Gastroenterología",
+          "especialidad_2": "Hepatología"
+        },
+        {
+          "id": 101,
+          "diagnostico": "Endocarditis infecciosa",
+          "motivo_consulta": "Fiebre, soplo y petequias",
+          "historia_actual": "Hombre de 35 años, adicto IV, fiebre alta, soplo nuevo, hemocultivo positivo",
+          "antecedentes": "Uso de drogas IV",
+          "edad": "35",
+          "peso": "68",
+          "examen_fisico": "Soplo sistólico, petequias, fiebre",
+          "evolucion": "Tratamiento prolongado, mejoría parcial",
+          "tratamiento": "Vancomicina, gentamicina",
+          "especialidad_1": "Cardiología",
+          "especialidad_2": "Infectología"
+        },
+        {
+          "id": 83,
+          "diagnostico": "Anemia ferropénica",
+          "motivo_consulta": "Fatiga, palidez y caída de cabello",
+          "historia_actual": "Mujer de 29 años, menstruaciones abundantes, cansancio progresivo",
+          "antecedentes": "Sin antecedentes, dieta vegetariana",
+          "edad": "29",
+          "peso": "62",
+          "examen_fisico": "Palidez mucocutánea, uñas frágiles",
+          "evolucion": "Mejoría tras suplementación",
+          "tratamiento": "Hierro oral, dieta rica en hierro",
+          "especialidad_1": "Medicina Interna",
+          "especialidad_2": "Ginecología"
+        },
+        {
+          "id": 23,
+          "diagnostico": "Hipotiroidismo primario adquirido con SCFE (epífisis femoral desplazada)",
+          "motivo_consulta": "Dolor de cadera izquierda",
+          "historia_actual": "Niña de 13 años con dolor de cadera izquierda tras jugar netball, marcha antiálgica, baja talla para la edad, no ha iniciado pubertad, intolerancia al frío, constipación crónica",
+          "antecedentes": "Madre con lupus eritematoso sistémico",
+          "edad": "13",
+          "peso": "49.1 kg",
+          "examen_fisico": "Baja talla (<3er percentil), piel amarilla, palidez, cara redondeada, mixedema no depresible, sin bocio",
+          "evolucion": "Mejoría tras tratamiento, aceleración del crecimiento, inicio pubertad",
+          "tratamiento": "Levotiroxina (T4), cirugía de cadera",
+          "especialidad_1": "Endocrinología (Endocrino)",
+          "especialidad_2": "Ortopedia (Ortop.)"
+        },
+        {
+          "id": 71,
+          "diagnostico": "Fibrosis pulmonar idiopática",
+          "motivo_consulta": "Disnea progresiva y tos seca crónica",
+          "historia_actual": "Hombre de 67 años, tos no productiva, disnea con mínimos esfuerzos desde hace 8 meses",
+          "antecedentes": "Exposición laboral a polvo, no fumador",
+          "edad": "67",
+          "peso": "68",
+          "examen_fisico": "Crepitantes basales, cianosis digital",
+          "evolucion": "Fibrosis confirmada, inicia antifibróticos",
+          "tratamiento": "Pirfenidona, oxígeno domiciliario",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Medicina Interna"
+        }
+      ]
+    }
+  },
+  {
+    "id": "6d739e6a-05ab-4431-a8e0-0698c298a9b9",
+    "timestamp": 1752860084699,
+    "tipoConsulta": "buscar_texto",
+    "consulta": {
+      "texto": "aaa"
+    },
+    "resultado": {
+      "resultados": [
+        {
+          "id": 23,
+          "diagnostico": "Hipotiroidismo primario adquirido con SCFE (epífisis femoral desplazada)",
+          "motivo_consulta": "Dolor de cadera izquierda",
+          "historia_actual": "Niña de 13 años con dolor de cadera izquierda tras jugar netball, marcha antiálgica, baja talla para la edad, no ha iniciado pubertad, intolerancia al frío, constipación crónica",
+          "antecedentes": "Madre con lupus eritematoso sistémico",
+          "edad": "13",
+          "peso": "49.1 kg",
+          "examen_fisico": "Baja talla (<3er percentil), piel amarilla, palidez, cara redondeada, mixedema no depresible, sin bocio",
+          "evolucion": "Mejoría tras tratamiento, aceleración del crecimiento, inicio pubertad",
+          "tratamiento": "Levotiroxina (T4), cirugía de cadera",
+          "especialidad_1": "Endocrinología (Endocrino)",
+          "especialidad_2": "Ortopedia (Ortop.)"
+        },
+        {
+          "id": 79,
+          "diagnostico": "Enfermedad pulmonar obstructiva crónica (EPOC)",
+          "motivo_consulta": "Disnea progresiva y tos crónica",
+          "historia_actual": "Hombre de 61 años, ex-fumador 40 años, tos con expectoración matinal, disnea al caminar",
+          "antecedentes": "Tabaquismo, bronquitis crónica",
+          "edad": "61",
+          "peso": "72",
+          "examen_fisico": "Espirometría obstructiva, tórax hiperinsuflado",
+          "evolucion": "Control sintomático, sin exacerbaciones",
+          "tratamiento": "Broncodilatadores, fisioterapia",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 69,
+          "diagnostico": "Infarto agudo de miocardio con elevación ST",
+          "motivo_consulta": "Dolor torácico intenso y sudoración",
+          "historia_actual": "Hombre de 55 años, dolor opresivo 1 hora, irradia a cuello, ECG con supradesnivel ST",
+          "antecedentes": "Fumador, hipertensión, hipercolesterolemia",
+          "edad": "55",
+          "peso": "82",
+          "examen_fisico": "PA: 140/80, FC: 102 lpm, sudoración",
+          "evolucion": "Angioplastia exitosa, mejoría clínica",
+          "tratamiento": "DAPT, estatinas, IECA",
+          "especialidad_1": "Cardiología",
+          "especialidad_2": "UCI"
+        },
+        {
+          "id": 27,
+          "diagnostico": "Hipotiroidismo autoinmune con obesidad y retraso del crecimiento",
+          "motivo_consulta": "Baja velocidad de crecimiento",
+          "historia_actual": "Niña de 9 años, adoptada, incremento de peso, sin aumento de talla desde los 7 años, sin antecedentes familiares conocidos",
+          "antecedentes": "Adoptada (sin datos familiares)",
+          "edad": "9",
+          "peso": "51.5 kg",
+          "examen_fisico": "Obesidad abdominal, sin dismorfias, sin bocio, peso >97 percentil, talla entre 3–10 percentil",
+          "evolucion": "Captación de crecimiento tras tratamiento, normalización metabólica",
+          "tratamiento": "Levotiroxina (T4)",
+          "especialidad_1": "Endocrinología (Endocrino)",
+          "especialidad_2": null
+        },
+        {
+          "id": 49,
+          "diagnostico": "Rabia humana",
+          "motivo_consulta": "Fiebre, parestesias y agresividad",
+          "historia_actual": "Niña de 10 años mordida por perro callejero hace 3 semanas, consulta por fiebre, dificultad para tragar, hidrofobia y agitación",
+          "antecedentes": "Mordedura de perro, no vacunada",
+          "edad": "10",
+          "peso": "32",
+          "examen_fisico": "Sialorrea, agitación psicomotriz, disfagia, fiebre",
+          "evolucion": "Se confirmó rabia, evolución tórpida y fallecimiento",
+          "tratamiento": "Soporte vital, cuidados paliativos",
+          "especialidad_1": "Infectología",
+          "especialidad_2": "Pediatría"
+        }
+      ]
+    }
+  },
+  {
+    "id": "838e2bf2-2cdd-4e5c-a445-86579683df50",
+    "timestamp": 1752860420941,
+    "tipoConsulta": "buscar_texto",
+    "consulta": {
+      "texto": "Tengo mucha fiebre y tos despues de ir a un restaurante"
+    },
+    "resultado": {
+      "resultados": [
+        {
+          "id": 71,
+          "diagnostico": "Fibrosis pulmonar idiopática",
+          "motivo_consulta": "Disnea progresiva y tos seca crónica",
+          "historia_actual": "Hombre de 67 años, tos no productiva, disnea con mínimos esfuerzos desde hace 8 meses",
+          "antecedentes": "Exposición laboral a polvo, no fumador",
+          "edad": "67",
+          "peso": "68",
+          "examen_fisico": "Crepitantes basales, cianosis digital",
+          "evolucion": "Fibrosis confirmada, inicia antifibróticos",
+          "tratamiento": "Pirfenidona, oxígeno domiciliario",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 27,
+          "diagnostico": "Hipotiroidismo autoinmune con obesidad y retraso del crecimiento",
+          "motivo_consulta": "Baja velocidad de crecimiento",
+          "historia_actual": "Niña de 9 años, adoptada, incremento de peso, sin aumento de talla desde los 7 años, sin antecedentes familiares conocidos",
+          "antecedentes": "Adoptada (sin datos familiares)",
+          "edad": "9",
+          "peso": "51.5 kg",
+          "examen_fisico": "Obesidad abdominal, sin dismorfias, sin bocio, peso >97 percentil, talla entre 3–10 percentil",
+          "evolucion": "Captación de crecimiento tras tratamiento, normalización metabólica",
+          "tratamiento": "Levotiroxina (T4)",
+          "especialidad_1": "Endocrinología (Endocrino)",
+          "especialidad_2": null
+        },
+        {
+          "id": 53,
+          "diagnostico": "Tuberculosis pulmonar activa",
+          "motivo_consulta": "Tos crónica, pérdida de peso y sudores nocturnos",
+          "historia_actual": "Hombre de 38 años, 2 meses con tos productiva, fiebre vespertina, sudores nocturnos y 8 kg de pérdida de peso",
+          "antecedentes": "Contacto con caso de TB, desnutrición leve",
+          "edad": "38",
+          "peso": "62",
+          "examen_fisico": "Estertores apicales, adenopatías cervicales",
+          "evolucion": "Inicio de esquema DOTS, evolución favorable",
+          "tratamiento": "Isoniazida, rifampicina, pirazinamida, etambutol",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Infectología"
+        },
+        {
+          "id": 101,
+          "diagnostico": "Endocarditis infecciosa",
+          "motivo_consulta": "Fiebre, soplo y petequias",
+          "historia_actual": "Hombre de 35 años, adicto IV, fiebre alta, soplo nuevo, hemocultivo positivo",
+          "antecedentes": "Uso de drogas IV",
+          "edad": "35",
+          "peso": "68",
+          "examen_fisico": "Soplo sistólico, petequias, fiebre",
+          "evolucion": "Tratamiento prolongado, mejoría parcial",
+          "tratamiento": "Vancomicina, gentamicina",
+          "especialidad_1": "Cardiología",
+          "especialidad_2": "Infectología"
+        },
+        {
+          "id": 49,
+          "diagnostico": "Rabia humana",
+          "motivo_consulta": "Fiebre, parestesias y agresividad",
+          "historia_actual": "Niña de 10 años mordida por perro callejero hace 3 semanas, consulta por fiebre, dificultad para tragar, hidrofobia y agitación",
+          "antecedentes": "Mordedura de perro, no vacunada",
+          "edad": "10",
+          "peso": "32",
+          "examen_fisico": "Sialorrea, agitación psicomotriz, disfagia, fiebre",
+          "evolucion": "Se confirmó rabia, evolución tórpida y fallecimiento",
+          "tratamiento": "Soporte vital, cuidados paliativos",
+          "especialidad_1": "Infectología",
+          "especialidad_2": "Pediatría"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ac2c1282-145b-4beb-be62-76665279ff1c",
+    "timestamp": 1752864584501,
+    "tipoConsulta": "diagnostico_inteligente",
+    "consulta": {
+      "texto": "Tengo tos y fiebre por mucho tiempo, no puedo salir de casa y ya tome pastillas"
+    },
+    "resultado": {
+      "diagnostico_probable": "Tuberculosis pulmonar activa.",
+      "explicacion": "La tos crónica persistente durante mucho tiempo, junto con fiebre generalizada y el hecho de que las pastillas no hayan resuelto completamente los síntomas, sugieren una enfermedad infecciosa seria como la tuberculosis. Se trata de un proceso inflamatorio e infeccioso en los pulmones causado por Mycobacterium tuberculosis.",
+      "especialidad_recomendada": "Neumología (a veces también Inmunología o Infectología Clínica).",
+      "preguntas_consulta": "¿Cuánto tiempo ha tenido exactamente fiebre y tos? ¿Ha habido algún episodio de sangre en las esputas o dificultad respiratoria notable? ¿Qué tipo de pastillas ha tomado, en qué dosis y durante cuánto tiempo? ¿Tiene algún antecedente familiar de tuberculosis pulmonar activa?"
+    }
+  },
+  {
+    "id": "c96c4969-178c-4113-84ae-320746fde10d",
+    "timestamp": 1752865291955,
+    "tipoConsulta": "diagnostico_inteligente",
+    "consulta": {
+      "texto": "Temperatura alta con fiebre grave"
+    },
+    "resultado": {
+      "diagnostico_probable": "Amigdalitis bacteriana aguda.",
+      "explicacion": "El paciente presenta fiebre alta, dolor de garganta severo (odinofagia) y dificultad para tragar. Se observan placas amigdalares sugiriendo una posible infección bacteriana en la faringe.",
+      "especialidad_recomendada": "Otorrino.",
+      "preguntas_consulta": "¿Cuál es la intensidad del dolor de garganta? ¿Hay placa blanquecina visible en las amígdalas? ¿Ha tenido tos o vómitos?"
+    }
+  },
+  {
+    "id": "7e7aba61-62b0-4e06-9947-1def50b7a8f6",
+    "timestamp": 1752870999299,
+    "tipoConsulta": "buscar",
+    "consulta": {
+      "edad": 30,
+      "sexo": "Masculino",
+      "peso": 70,
+      "sintomas": "tos y gripe",
+      "antecedentes": "Covid 19"
+    },
+    "resultado": {
+      "resultados": [
+        {
+          "id": 21,
+          "diagnostico": "Cirrosis hepática y COVID-19 (coronavirus)",
+          "motivo_consulta": "Fiebre, tos, disnea, debilidad general, diarrea",
+          "historia_actual": "Mujer de 73 años con fiebre (pico de 39°C), tos, expectoración, disnea y debilidad general de 5 días de evolución. Dos días antes del ingreso presentó diarrea (3-4 deposiciones/día). Contacto estrecho con hija COVID-19 positiva.",
+          "antecedentes": "Cirrosis hepática, diabetes tipo 2. Sin tabaquismo ni alcoholismo.",
+          "edad": "73",
+          "peso": "No reportado",
+          "examen_fisico": "T° 38.8°C, pulso 100 lpm, FR 22 rpm, SatO2 85%, facies hepática, palmas hepáticas, murmullo vesicular grueso, crepitantes en ambos pulmones, abdomen blando, sin masas, sin dolor hepático, sin ascitis.",
+          "evolucion": "Evolución clínica prolongada con hospitalización de 32 días. Persistió con fiebre, tos y diarrea; infiltrados pulmonares en TC (tomografía computarizada). Dificultad para eliminar el virus; necesitó plasma de convaleciente en 4 ocasiones.",
+          "tratamiento": "Lopinavir/ritonavir, interferón alfa-2b, metilprednisolona, moxifloxacino, albúmina, inmunoglobulina humana, pantoprazol, lactulosa, glutathión reducido, timozina, cloroquina, plasma de convaleciente, tratamiento sintomático y soporte.",
+          "especialidad_1": "Medicina interna (Med. Int.)",
+          "especialidad_2": "Gastroenterología (Gastro.)"
+        },
+        {
+          "id": 50,
+          "diagnostico": "Neumonía por COVID-19 moderada",
+          "motivo_consulta": "Tos seca, fiebre y disnea progresiva",
+          "historia_actual": "Hombre de 36 años, 6 días con fiebre alta, tos seca, dificultad para respirar, saturación 88%. PCR COVID positiva",
+          "antecedentes": "Sin comorbilidades, contacto reciente COVID+",
+          "edad": "36",
+          "peso": "90",
+          "examen_fisico": "PA: 110/70 mmHg, FR: 28 rpm, SatO2: 88%, crepitantes bilaterales",
+          "evolucion": "Hospitalizado, requerimiento de oxígeno, mejoría progresiva",
+          "tratamiento": "Oxígeno suplementario, dexametasona, anticoagulación",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 64,
+          "diagnostico": "Hipotiroidismo clínico",
+          "motivo_consulta": "Aumento de peso, fatiga y caída de cabello",
+          "historia_actual": "Mujer de 47 años, síntomas progresivos por 6 meses, TSH elevada, T4 baja",
+          "antecedentes": "Hermana con tiroiditis, sin otros antecedentes",
+          "edad": "47",
+          "peso": "82",
+          "examen_fisico": "Bradicardia, piel seca, voz ronca",
+          "evolucion": "Síntomas remiten con levotiroxina",
+          "tratamiento": "Levotiroxina, seguimiento TSH",
+          "especialidad_1": "Endocrinología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 94,
+          "diagnostico": "Cáncer de próstata localizado",
+          "motivo_consulta": "Disuria, nicturia y goteo terminal",
+          "historia_actual": "Hombre de 68 años, síntomas urinarios progresivos, PSA elevado",
+          "antecedentes": "Padre con CA próstata",
+          "edad": "68",
+          "peso": "78",
+          "examen_fisico": "Próstata aumentada, nódulo duro",
+          "evolucion": "Confirmado por biopsia, cirugía planificada",
+          "tratamiento": "Prostatectomía, vigilancia",
+          "especialidad_1": "Urología",
+          "especialidad_2": "Oncología"
+        },
+        {
+          "id": 27,
+          "diagnostico": "Hipotiroidismo autoinmune con obesidad y retraso del crecimiento",
+          "motivo_consulta": "Baja velocidad de crecimiento",
+          "historia_actual": "Niña de 9 años, adoptada, incremento de peso, sin aumento de talla desde los 7 años, sin antecedentes familiares conocidos",
+          "antecedentes": "Adoptada (sin datos familiares)",
+          "edad": "9",
+          "peso": "51.5 kg",
+          "examen_fisico": "Obesidad abdominal, sin dismorfias, sin bocio, peso >97 percentil, talla entre 3–10 percentil",
+          "evolucion": "Captación de crecimiento tras tratamiento, normalización metabólica",
+          "tratamiento": "Levotiroxina (T4)",
+          "especialidad_1": "Endocrinología (Endocrino)",
+          "especialidad_2": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "e313b21f-901c-4e89-bea7-bdfeee6c52d9",
+    "timestamp": 1752871035689,
+    "tipoConsulta": "buscar",
+    "consulta": {
+      "edad": 20,
+      "sexo": "Femenino",
+      "peso": 50,
+      "sintomas": "Fiebre y tos",
+      "antecedentes": "Covid 19"
+    },
+    "resultado": {
+      "resultados": [
+        {
+          "id": 21,
+          "diagnostico": "Cirrosis hepática y COVID-19 (coronavirus)",
+          "motivo_consulta": "Fiebre, tos, disnea, debilidad general, diarrea",
+          "historia_actual": "Mujer de 73 años con fiebre (pico de 39°C), tos, expectoración, disnea y debilidad general de 5 días de evolución. Dos días antes del ingreso presentó diarrea (3-4 deposiciones/día). Contacto estrecho con hija COVID-19 positiva.",
+          "antecedentes": "Cirrosis hepática, diabetes tipo 2. Sin tabaquismo ni alcoholismo.",
+          "edad": "73",
+          "peso": "No reportado",
+          "examen_fisico": "T° 38.8°C, pulso 100 lpm, FR 22 rpm, SatO2 85%, facies hepática, palmas hepáticas, murmullo vesicular grueso, crepitantes en ambos pulmones, abdomen blando, sin masas, sin dolor hepático, sin ascitis.",
+          "evolucion": "Evolución clínica prolongada con hospitalización de 32 días. Persistió con fiebre, tos y diarrea; infiltrados pulmonares en TC (tomografía computarizada). Dificultad para eliminar el virus; necesitó plasma de convaleciente en 4 ocasiones.",
+          "tratamiento": "Lopinavir/ritonavir, interferón alfa-2b, metilprednisolona, moxifloxacino, albúmina, inmunoglobulina humana, pantoprazol, lactulosa, glutathión reducido, timozina, cloroquina, plasma de convaleciente, tratamiento sintomático y soporte.",
+          "especialidad_1": "Medicina interna (Med. Int.)",
+          "especialidad_2": "Gastroenterología (Gastro.)"
+        },
+        {
+          "id": 50,
+          "diagnostico": "Neumonía por COVID-19 moderada",
+          "motivo_consulta": "Tos seca, fiebre y disnea progresiva",
+          "historia_actual": "Hombre de 36 años, 6 días con fiebre alta, tos seca, dificultad para respirar, saturación 88%. PCR COVID positiva",
+          "antecedentes": "Sin comorbilidades, contacto reciente COVID+",
+          "edad": "36",
+          "peso": "90",
+          "examen_fisico": "PA: 110/70 mmHg, FR: 28 rpm, SatO2: 88%, crepitantes bilaterales",
+          "evolucion": "Hospitalizado, requerimiento de oxígeno, mejoría progresiva",
+          "tratamiento": "Oxígeno suplementario, dexametasona, anticoagulación",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 101,
+          "diagnostico": "Endocarditis infecciosa",
+          "motivo_consulta": "Fiebre, soplo y petequias",
+          "historia_actual": "Hombre de 35 años, adicto IV, fiebre alta, soplo nuevo, hemocultivo positivo",
+          "antecedentes": "Uso de drogas IV",
+          "edad": "35",
+          "peso": "68",
+          "examen_fisico": "Soplo sistólico, petequias, fiebre",
+          "evolucion": "Tratamiento prolongado, mejoría parcial",
+          "tratamiento": "Vancomicina, gentamicina",
+          "especialidad_1": "Cardiología",
+          "especialidad_2": "Infectología"
+        },
+        {
+          "id": 64,
+          "diagnostico": "Hipotiroidismo clínico",
+          "motivo_consulta": "Aumento de peso, fatiga y caída de cabello",
+          "historia_actual": "Mujer de 47 años, síntomas progresivos por 6 meses, TSH elevada, T4 baja",
+          "antecedentes": "Hermana con tiroiditis, sin otros antecedentes",
+          "edad": "47",
+          "peso": "82",
+          "examen_fisico": "Bradicardia, piel seca, voz ronca",
+          "evolucion": "Síntomas remiten con levotiroxina",
+          "tratamiento": "Levotiroxina, seguimiento TSH",
+          "especialidad_1": "Endocrinología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 53,
+          "diagnostico": "Tuberculosis pulmonar activa",
+          "motivo_consulta": "Tos crónica, pérdida de peso y sudores nocturnos",
+          "historia_actual": "Hombre de 38 años, 2 meses con tos productiva, fiebre vespertina, sudores nocturnos y 8 kg de pérdida de peso",
+          "antecedentes": "Contacto con caso de TB, desnutrición leve",
+          "edad": "38",
+          "peso": "62",
+          "examen_fisico": "Estertores apicales, adenopatías cervicales",
+          "evolucion": "Inicio de esquema DOTS, evolución favorable",
+          "tratamiento": "Isoniazida, rifampicina, pirazinamida, etambutol",
+          "especialidad_1": "Neumología",
+          "especialidad_2": "Infectología"
+        }
+      ]
+    }
+  }
+]
