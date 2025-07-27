@@ -10,8 +10,15 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import re
 
+# ======= Carga MedGemma-4B-Instruct =======
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+tokenizer = AutoTokenizer.from_pretrained("google/medgemma-4b-it")
+model = AutoModelForCausalLM.from_pretrained("google/medgemma-4b-it")
+# model = model.to("cuda")  # Si tienes GPU compatible
+
 app = FastAPI()
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model_st = SentenceTransformer('all-MiniLM-L6-v2')
 df = pd.read_csv("dataset_casos_clinicos_OK.csv", encoding="utf-8")
 HISTORIAL_FILE = Path("historial_resultados.json")
 
@@ -28,9 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-embeddings = model.encode(df['motivo_consulta'].astype(str) + ". " + df['historia_actual'].astype(str))
+embeddings = model_st.encode(df['motivo_consulta'].astype(str) + ". " + df['historia_actual'].astype(str))
 
-# Modelo para consulta estructurada
 class ConsultaSimple(BaseModel):
     edad: int
     sexo: str
@@ -38,32 +44,41 @@ class ConsultaSimple(BaseModel):
     sintomas: str
     antecedentes: str = None
 
-# Modelo para texto libre
 class ConsultaTexto(BaseModel):
     texto: str
 
-def consulta_ollama(prompt, modelo="deepseek-r1:8b"):
-    import requests
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": modelo,
-            "prompt": prompt,
-            "stream": False
-        }
-    )
-    data = response.json()
-    texto_completo = data.get("response", "")
+def consulta_llm(prompt, max_new_tokens=256):
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
+    respuesta = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return respuesta
 
-    # Extraer solo la parte posterior a </think>
-    if "</think>" in texto_completo:
-        texto_limpio = texto_completo.split("</think>")[-1].strip()
-    else:
-        texto_limpio = texto_completo.strip()
+def parsear_respuesta_medgemma_markdown(respuesta):
+    # Busca la respuesta a partir de '1.  **Diagnóstico probable:**'
+    diagnostico = re.search(r"1\.\s+\*\*Diagn[oó]stico probable:\*\*\s*(.*)", respuesta, re.IGNORECASE)
+    explicacion = re.search(r"2\.\s+\*\*Explicaci[oó]n:\*\*\s*(.*)", respuesta, re.IGNORECASE)
+    especialidad = re.search(r"3\.\s+\*\*Especialidad m[eé]dica recomendada:\*\*\s*(.*)", respuesta, re.IGNORECASE)
+    preguntas = re.search(r"4\.\s+\*\*Preguntas que deber[ií]a hacer el m[eé]dico en consulta:\*\*\s*([\s\S]*)", respuesta, re.IGNORECASE)
 
-    return texto_limpio
+    # Procesa preguntas en formato de lista markdown
+    preguntas_texto = ""
+    if preguntas and preguntas.group(1):
+        # Busca todas las líneas que empiezan con *, - o número
+        preguntas_list = re.findall(r"[*-]\s*(.*)", preguntas.group(1))
+        if preguntas_list:
+            preguntas_texto = " ".join([q.strip() for q in preguntas_list])
+        else:
+            # Si no, toma el bloque tal cual
+            preguntas_texto = preguntas.group(1).strip()
 
-# POST Buscar de estructura
+    return {
+        "diagnostico_probable": diagnostico.group(1).strip() if diagnostico else "",
+        "explicacion": explicacion.group(1).strip() if explicacion else "",
+        "especialidad_recomendada": especialidad.group(1).strip() if especialidad else "",
+        "preguntas_consulta": preguntas_texto
+    }
+
+
 @app.post("/buscar")
 def buscar_casos(consulta: ConsultaSimple):
     try:
@@ -74,8 +89,7 @@ def buscar_casos(consulta: ConsultaSimple):
             f"Síntomas: {consulta.sintomas}. "
             f"Antecedentes: {consulta.antecedentes or ''}."
         )
-
-        consulta_emb = model.encode([texto])[0]
+        consulta_emb = model_st.encode([texto])[0]
         sims = cosine_similarity([consulta_emb], embeddings)[0]
         top_idx = np.argsort(sims)[::-1][:5]
         resultados = df.iloc[top_idx].where(pd.notnull(df.iloc[top_idx]), None).to_dict(orient="records")
@@ -85,11 +99,10 @@ def buscar_casos(consulta: ConsultaSimple):
         print(traceback.format_exc())
         return {"error": str(e)}
 
-# POST Buscar de un texto
 @app.post("/buscar_texto")
 def buscar_casos_texto(consulta: ConsultaTexto):
     try:
-        consulta_emb = model.encode([consulta.texto])[0]
+        consulta_emb = model_st.encode([consulta.texto])[0]
         sims = cosine_similarity([consulta_emb], embeddings)[0]
         top_idx = np.argsort(sims)[::-1][:5]
         resultados = df.iloc[top_idx].where(pd.notnull(df.iloc[top_idx]), None).to_dict(orient="records")
@@ -98,28 +111,19 @@ def buscar_casos_texto(consulta: ConsultaTexto):
         import traceback
         print(traceback.format_exc())
         return {"error": str(e)}
-
-# POST Buscar con Deepseek r1
-import re
 
 @app.post("/diagnostico_inteligente")
 def diagnostico_inteligente(consulta: ConsultaTexto):
     try:
-        # Busca casos similares
-        consulta_emb = model.encode([consulta.texto])[0]
+        consulta_emb = model_st.encode([consulta.texto])[0]
         sims = cosine_similarity([consulta_emb], embeddings)[0]
-        top_idx = np.argsort(sims)[::-1][:5]
+        # SOLO LOS 3 más parecidos
+        top_idx = np.argsort(sims)[::-1][:3]
         casos_similares = df.iloc[top_idx]
 
-        # Construye prompt para Ollama
         prompt = (
-            "Eres un asistente médico IA. Analiza este caso clínico:\n\n"
-            f"Paciente: {consulta.texto}\n\n"
-            "Basándote en estos 5 casos clínicos similares, "
-            "haz un diagnóstico probable, una breve explicación clara (máximo 3 frases) "
-            "que incluya una pequeña descripción de la enfermedad, "
-            "la especialidad médica recomendada y preguntas que el médico debería hacer en la consulta.\n\n"
-            "Casos similares:\n"
+            f"Paciente: {consulta.texto}\n"
+            "A continuación, se muestran algunos casos clínicos similares:\n"
         )
         for i, row in casos_similares.iterrows():
             prompt += (
@@ -127,29 +131,19 @@ def diagnostico_inteligente(consulta: ConsultaTexto):
                 f"Historia actual: {row['historia_actual']}. "
                 f"Diagnóstico: {row['diagnostico']}.\n"
             )
-
         prompt += (
-            "\nPor favor, responde solo con un texto estructurado similar a este formato:\n"
-            "Diagnóstico probable: <diagnóstico>.\n"
-            "Explicación: <explicación breve>.\n"
-            "Especialidad recomendada: <especialidad>.\n"
-            "Preguntas para la consulta: <preguntas>.\n"
+            "\nCon base en esta información, responde las siguientes preguntas en español:\n"
+            "1. ¿Cuál es el diagnóstico probable?\n"
+            "2. Explica brevemente por qué.\n"
+            "3. ¿Qué especialidad médica se recomienda?\n"
+            "4. ¿Qué preguntas debería hacer el médico en consulta?\n"
         )
 
-        respuesta = consulta_ollama(prompt, modelo="deepseek-r1:8b")
+        respuesta = consulta_llm(prompt, max_new_tokens=256)
+        print("DEBUG RESPUESTA:", respuesta)
+        respuesta_parseada = parsear_respuesta_medgemma_markdown(respuesta)
+        return respuesta_parseada
 
-        # Parsear la respuesta en campos usando expresiones regulares
-        diagnostico_probable = re.search(r"Diagnóstico probable:\s*(.*)", respuesta)
-        explicacion = re.search(r"Explicación:\s*(.*)", respuesta)
-        especialidad = re.search(r"Especialidad recomendada:\s*(.*)", respuesta)
-        preguntas = re.search(r"Preguntas para la consulta:\s*([\s\S]*)", respuesta)  # Captura multilinea
-
-        return {
-            "diagnostico_probable": diagnostico_probable.group(1).strip() if diagnostico_probable else "",
-            "explicacion": explicacion.group(1).strip() if explicacion else "",
-            "especialidad_recomendada": especialidad.group(1).strip() if especialidad else "",
-            "preguntas_consulta": preguntas.group(1).strip() if preguntas else ""
-        }
 
     except Exception as e:
         import traceback
@@ -159,25 +153,17 @@ def diagnostico_inteligente(consulta: ConsultaTexto):
 @app.post("/guardarResultado")
 async def guardar_resultado(resultado: dict):
     try:
-        # Leer archivo existente o crear lista vacía
         if HISTORIAL_FILE.exists():
             with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
                 historial = json.load(f)
         else:
             historial = []
-
-        # Añadir nuevo resultado
         historial.append(resultado)
-
-        # Guardar actualizado
         with open(HISTORIAL_FILE, "w", encoding="utf-8") as f:
             json.dump(historial, f, indent=2, ensure_ascii=False)
-
         return {"mensaje": "Resultado guardado exitosamente"}
-
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 
 @app.get("/resultados")
 async def obtener_resultados():
