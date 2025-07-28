@@ -16,3 +16,6 @@ Thumbs.db
 
 # Opcional: Ignorar archivos de entorno local
 .env
+.venv
+venv/
+env/

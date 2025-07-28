@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 from pydantic import BaseModel
@@ -9,24 +9,17 @@ from sentence_transformers import SentenceTransformer
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+import httpx
 
-# ======= Carga MedGemma-4B-Instruct =======
-from transformers import AutoTokenizer, AutoModelForCausalLM
-
-tokenizer = AutoTokenizer.from_pretrained("google/medgemma-4b-it")
-model = AutoModelForCausalLM.from_pretrained("google/medgemma-4b-it")
-# model = model.to("cuda")  # Si tienes GPU compatible
-
-app = FastAPI()
+# ========== Carga modelo de embeddings ==========
 model_st = SentenceTransformer('all-MiniLM-L6-v2')
 df = pd.read_csv("dataset_casos_clinicos_OK.csv", encoding="utf-8")
 HISTORIAL_FILE = Path("historial_resultados.json")
+embeddings = model_st.encode(df['motivo_consulta'].astype(str) + ". " + df['historia_actual'].astype(str))
 
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-
+# ========== Configuración FastAPI ==========
+app = FastAPI()
+origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -35,8 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-embeddings = model_st.encode(df['motivo_consulta'].astype(str) + ". " + df['historia_actual'].astype(str))
-
+# ========== Modelos de datos ==========
 class ConsultaSimple(BaseModel):
     edad: int
     sexo: str
@@ -47,28 +39,36 @@ class ConsultaSimple(BaseModel):
 class ConsultaTexto(BaseModel):
     texto: str
 
-def consulta_llm(prompt, max_new_tokens=256):
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
-    respuesta = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return respuesta
+# ========== Modelo local ==========
+modelo_local = None
+tokenizer_local = None
+modelo_local_cargado = False
 
+def cargar_modelo_local():
+    global modelo_local, tokenizer_local, modelo_local_cargado
+    if not modelo_local_cargado:
+        try:
+            print("Cargando modelo MedGemma localmente...")
+            from transformers import AutoTokenizer, AutoModelForCausalLM
+            tokenizer_local = AutoTokenizer.from_pretrained("google/medgemma-4b-it")
+            modelo_local = AutoModelForCausalLM.from_pretrained("google/medgemma-4b-it")
+            modelo_local_cargado = True
+        except Exception as e:
+            print("No se pudo cargar el modelo local:", str(e))
+
+# ========== Procesamiento de salida ==========
 def parsear_respuesta_medgemma_markdown(respuesta):
-    # Busca la respuesta a partir de '1.  **Diagnóstico probable:**'
     diagnostico = re.search(r"1\.\s+\*\*Diagn[oó]stico probable:\*\*\s*(.*)", respuesta, re.IGNORECASE)
     explicacion = re.search(r"2\.\s+\*\*Explicaci[oó]n:\*\*\s*(.*)", respuesta, re.IGNORECASE)
     especialidad = re.search(r"3\.\s+\*\*Especialidad m[eé]dica recomendada:\*\*\s*(.*)", respuesta, re.IGNORECASE)
     preguntas = re.search(r"4\.\s+\*\*Preguntas que deber[ií]a hacer el m[eé]dico en consulta:\*\*\s*([\s\S]*)", respuesta, re.IGNORECASE)
 
-    # Procesa preguntas en formato de lista markdown
     preguntas_texto = ""
     if preguntas and preguntas.group(1):
-        # Busca todas las líneas que empiezan con *, - o número
         preguntas_list = re.findall(r"[*-]\s*(.*)", preguntas.group(1))
         if preguntas_list:
             preguntas_texto = " ".join([q.strip() for q in preguntas_list])
         else:
-            # Si no, toma el bloque tal cual
             preguntas_texto = preguntas.group(1).strip()
 
     return {
@@ -78,7 +78,30 @@ def parsear_respuesta_medgemma_markdown(respuesta):
         "preguntas_consulta": preguntas_texto
     }
 
+# ========== Consulta a LLM ==========
+def consulta_llm(prompt, max_new_tokens=256, usar_nube=True):
+    if usar_nube:
+        try:
+            response = httpx.post(
+                "http://35.208.119.20:8000/medgemma",
+                json={"texto": prompt},
+                timeout=120
+            )
+            if response.status_code == 200:
+                return response.json()["respuesta"]
+            else:
+                raise Exception("Respuesta inválida desde la nube")
+        except Exception as e:
+            print("Fallo en nube, usando modelo local:", str(e))
 
+    if not modelo_local_cargado:
+        cargar_modelo_local()
+
+    inputs = tokenizer_local(prompt, return_tensors="pt")
+    outputs = modelo_local.generate(**inputs, max_new_tokens=max_new_tokens)
+    return tokenizer_local.decode(outputs[0], skip_special_tokens=True)
+
+# ========== Endpoints ==========
 @app.post("/buscar")
 def buscar_casos(consulta: ConsultaSimple):
     try:
@@ -113,11 +136,10 @@ def buscar_casos_texto(consulta: ConsultaTexto):
         return {"error": str(e)}
 
 @app.post("/diagnostico_inteligente")
-def diagnostico_inteligente(consulta: ConsultaTexto):
+def diagnostico_inteligente(consulta: ConsultaTexto, usar_nube: bool = Query(True)):
     try:
         consulta_emb = model_st.encode([consulta.texto])[0]
         sims = cosine_similarity([consulta_emb], embeddings)[0]
-        # SOLO LOS 3 más parecidos
         top_idx = np.argsort(sims)[::-1][:3]
         casos_similares = df.iloc[top_idx]
 
@@ -131,6 +153,7 @@ def diagnostico_inteligente(consulta: ConsultaTexto):
                 f"Historia actual: {row['historia_actual']}. "
                 f"Diagnóstico: {row['diagnostico']}.\n"
             )
+
         prompt += (
             "\nCon base en esta información, responde las siguientes preguntas en español:\n"
             "1. ¿Cuál es el diagnóstico probable?\n"
@@ -139,12 +162,9 @@ def diagnostico_inteligente(consulta: ConsultaTexto):
             "4. ¿Qué preguntas debería hacer el médico en consulta?\n"
         )
 
-        respuesta = consulta_llm(prompt, max_new_tokens=256)
+        respuesta = consulta_llm(prompt, usar_nube=usar_nube)
         print("DEBUG RESPUESTA:", respuesta)
-        respuesta_parseada = parsear_respuesta_medgemma_markdown(respuesta)
-        return respuesta_parseada
-
-
+        return parsear_respuesta_medgemma_markdown(respuesta)
     except Exception as e:
         import traceback
         print(traceback.format_exc())
