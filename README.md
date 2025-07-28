@@ -9,13 +9,13 @@ Está diseñado en dos módulos principales:
 
 ---
 
-## 🔍 Objetivo
+## Objetivo
 
 Apoyar el diagnóstico clínico preliminar y la formación médica mediante el uso de procesamiento de lenguaje natural (PLN) y recuperación semántica a partir de casos clínicos vectorizados.
 
 ---
 
-## 📦 Requisitos del Sistema
+## Requisitos del Sistema
 
 ### Requisitos Generales (si se ejecuta MedGemma localmente)
 
