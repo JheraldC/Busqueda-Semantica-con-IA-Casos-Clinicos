@@ -13,7 +13,7 @@ dist/
 Thumbs.db
 *.swp
 .vscode/
-__pycache__
+__pycache__/
 
 # Opcional: Ignorar archivos de entorno local
 .env
