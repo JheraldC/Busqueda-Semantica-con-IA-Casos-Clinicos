@@ -1,13 +1,16 @@
 import json
 from pathlib import Path
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+from PIL import Image
+from io import BytesIO
+import torch
 import re
 import httpx
 
@@ -39,7 +42,7 @@ class ConsultaSimple(BaseModel):
 class ConsultaTexto(BaseModel):
     texto: str
 
-# ========== Modelo local ==========
+# ========== Modelo local de texto ==========
 modelo_local = None
 tokenizer_local = None
 modelo_local_cargado = False
@@ -56,7 +59,7 @@ def cargar_modelo_local():
         except Exception as e:
             print("No se pudo cargar el modelo local:", str(e))
 
-# ========== Procesamiento de salida ==========
+# ========== Procesamiento de respuesta markdown ==========
 def parsear_respuesta_medgemma_markdown(respuesta):
     diagnostico = re.search(r"1\.\s+\*\*Diagn[oó]stico probable:\*\*\s*(.*)", respuesta, re.IGNORECASE)
     explicacion = re.search(r"2\.\s+\*\*Explicaci[oó]n:\*\*\s*(.*)", respuesta, re.IGNORECASE)
@@ -196,3 +199,47 @@ async def obtener_resultados():
         return {"resultados": historial}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ========== NUEVO: Diagnóstico basado en imagen ==========
+@app.post("/diagnostico_imagen")
+async def diagnostico_por_imagen(files: List[UploadFile] = File(...)):
+    try:
+        if len(files) > 3:
+            return JSONResponse(status_code=400, content={"error": "Máximo 3 imágenes permitidas"})
+
+        from transformers import pipeline
+        pipe = pipeline(
+            "image-text-to-text",
+            model="google/medgemma-4b-it",
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+        )
+
+        responses = []
+
+        for file in files:
+            image = Image.open(BytesIO(await file.read()))
+
+            messages = [
+                {
+                    "role": "system",
+                    "content": [{"type": "text", "text": "You are an expert radiologist."}]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Describe this CT scan"},
+                        {"type": "image", "image": image}
+                    ]
+                }
+            ]
+
+            output = pipe(text=messages, max_new_tokens=300)
+            responses.append(output[0]["generated_text"][-1]["content"])
+
+        return {"respuestas": responses}
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"error": str(e)}
