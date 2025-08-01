@@ -27,7 +27,11 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
         try {
             let url = "";
             let body = {};
-            if (tipoConsulta === "buscar") {
+            let isImageDiagnosis = tipoConsulta === "diagnostico_imagen";
+
+            if (isImageDiagnosis) {
+                url = "http://127.0.0.1:8000/diagnostico_imagen";
+            } else if (tipoConsulta === "buscar") {
                 url = "http://127.0.0.1:8000/buscar";
                 body = {
                     edad: parseInt(formData.edad),
@@ -44,22 +48,33 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
                 body = { texto: formData.texto };
             }
 
-            console.log("Enviando consulta a:", url);
-            console.log("Body de consulta:", body);
-
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
+            let response;
+            if (isImageDiagnosis) {
+                // Enviar imágenes usando FormData
+                const form = new FormData();
+                if (!formData.imagenes || formData.imagenes.length === 0) {
+                    throw new Error("Debe subir al menos una imagen.");
+                }
+                for (let i = 0; i < formData.imagenes.length; i++) {
+                    form.append("files", formData.imagenes[i]);
+                }
+                response = await fetch(url, {
+                    method: "POST",
+                    body: form,
+                });
+            } else {
+                response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+            }
 
             if (!response.ok) {
                 throw new Error(`Error en consulta: ${response.status} ${response.statusText}`);
             }
 
             const data = await response.json();
-            console.log("Respuesta recibida de consulta:", data);
-
             clearTimeout(loadingTimeout.current);
             setLoading(false);
 
@@ -67,12 +82,13 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
                 id: uuidv4(),
                 timestamp: Date.now(),
                 tipoConsulta,
-                consulta: body,
+                consulta: isImageDiagnosis
+                    ? { imagenes: [...formData.imagenes].map(f => f.name) }
+                    : body,
                 resultado: data,
             };
 
-            console.log("Enviando nuevoResultado a guardar:", nuevoResultado);
-
+            // Guardar resultado en el backend
             const saveResponse = await fetch("http://127.0.0.1:8000/guardarResultado", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -87,18 +103,13 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
                 console.log("Resultado guardado exitosamente.");
             }
 
-            // Traer historial actualizado desde backend
+            // Actualizar historial desde backend
             const resHistorial = await fetch("http://127.0.0.1:8000/resultados");
             if (!resHistorial.ok) {
                 throw new Error(`Error al traer historial: ${resHistorial.status}`);
             }
-
             const historialActualizado = await resHistorial.json();
-            console.log("Historial actualizado recibido:", historialActualizado);
-
-            // Asegurarse de pasar solo el arreglo resultados
             if (!Array.isArray(historialActualizado.resultados)) {
-                console.warn("La respuesta no contiene un arreglo 'resultados'.", historialActualizado);
                 onSetResultadosHistorial([]);
             } else {
                 onSetResultadosHistorial(historialActualizado.resultados);
@@ -117,8 +128,6 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
         }
     };
 
-
-
     return (
         <section className="max-w-3xl mx-auto bg-white p-10 rounded shadow">
             <div className="mb-8">
@@ -133,6 +142,7 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
                     <option value="buscar">Buscar (Datos Estructurados)</option>
                     <option value="buscar_texto">Buscar Texto Libre</option>
                     <option value="diagnostico_inteligente">Diagnóstico Inteligente</option>
+                    <option value="diagnostico_imagen">Diagnóstico por Imágenes Radiológicas</option>
                 </select>
             </div>
 
@@ -233,6 +243,25 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
                         ></textarea>
                     </div>
                 )}
+
+                {tipoConsulta === "diagnostico_imagen" && (
+                    <div>
+                        <label htmlFor="imagenes" className="block mb-2 font-medium">
+                            Subir imágenes (máx. 3, formatos: jpg, png)
+                        </label>
+                        <input
+                            type="file"
+                            id="imagenes"
+                            name="imagenes"
+                            accept="image/*"
+                            multiple
+                            className="w-full border border-indigo-400 rounded-lg p-3"
+                            onChange={(e) => setFormData({ ...formData, imagenes: e.target.files })}
+                            required
+                        />
+                    </div>
+                )}
+
 
                 {loading && (
                     <div className="flex justify-center mb-4">

@@ -526,5 +526,87 @@
         }
       ]
     }
+  },
+  {
+    "id": "69a8f53f-58a8-4917-a720-231cfb317695",
+    "timestamp": 1753890711298,
+    "tipoConsulta": "buscar_texto",
+    "consulta": {
+      "texto": "Tengo 10 años y tengo gripe despues de comer helado"
+    },
+    "resultado": {
+      "resultados": [
+        {
+          "id": 27,
+          "diagnostico": "Hipotiroidismo autoinmune con obesidad y retraso del crecimiento",
+          "motivo_consulta": "Baja velocidad de crecimiento",
+          "historia_actual": "Niña de 9 años, adoptada, incremento de peso, sin aumento de talla desde los 7 años, sin antecedentes familiares conocidos",
+          "antecedentes": "Adoptada (sin datos familiares)",
+          "edad": "9",
+          "peso": "51.5 kg",
+          "examen_fisico": "Obesidad abdominal, sin dismorfias, sin bocio, peso >97 percentil, talla entre 3–10 percentil",
+          "evolucion": "Captación de crecimiento tras tratamiento, normalización metabólica",
+          "tratamiento": "Levotiroxina (T4)",
+          "especialidad_1": "Endocrinología (Endocrino)",
+          "especialidad_2": null
+        },
+        {
+          "id": 96,
+          "diagnostico": "Celulitis infecciosa de pierna",
+          "motivo_consulta": "Eritema, calor y dolor en pierna derecha",
+          "historia_actual": "Hombre de 42 años, antecedente de herida, fiebre y área caliente, roja y edematosa",
+          "antecedentes": "DM2 mal controlada",
+          "edad": "42",
+          "peso": "90",
+          "examen_fisico": "Eritema, edema, calor local",
+          "evolucion": "Buena respuesta a antibiótico IV",
+          "tratamiento": "Ceftriaxona, reposo",
+          "especialidad_1": "Infectología",
+          "especialidad_2": "Medicina Interna"
+        },
+        {
+          "id": 101,
+          "diagnostico": "Endocarditis infecciosa",
+          "motivo_consulta": "Fiebre, soplo y petequias",
+          "historia_actual": "Hombre de 35 años, adicto IV, fiebre alta, soplo nuevo, hemocultivo positivo",
+          "antecedentes": "Uso de drogas IV",
+          "edad": "35",
+          "peso": "68",
+          "examen_fisico": "Soplo sistólico, petequias, fiebre",
+          "evolucion": "Tratamiento prolongado, mejoría parcial",
+          "tratamiento": "Vancomicina, gentamicina",
+          "especialidad_1": "Cardiología",
+          "especialidad_2": "Infectología"
+        },
+        {
+          "id": 61,
+          "diagnostico": "Asma bronquial leve persistente",
+          "motivo_consulta": "Tos seca nocturna y disnea con ejercicio",
+          "historia_actual": "Niño de 8 años, crisis leves 2-3 veces al mes, sin hospitalizaciones previas",
+          "antecedentes": "Madre con rinitis, antecedentes de prematuridad",
+          "edad": "8",
+          "peso": "29",
+          "examen_fisico": "Sibilancias leves, FR: 20 rpm",
+          "evolucion": "Buen control con inhalador de rescate",
+          "tratamiento": "Salbutamol inhalador, educación en asma",
+          "especialidad_1": "Pediatría",
+          "especialidad_2": "Neumología pediátrica"
+        },
+        {
+          "id": 64,
+          "diagnostico": "Hipotiroidismo clínico",
+          "motivo_consulta": "Aumento de peso, fatiga y caída de cabello",
+          "historia_actual": "Mujer de 47 años, síntomas progresivos por 6 meses, TSH elevada, T4 baja",
+          "antecedentes": "Hermana con tiroiditis, sin otros antecedentes",
+          "edad": "47",
+          "peso": "82",
+          "examen_fisico": "Bradicardia, piel seca, voz ronca",
+          "evolucion": "Síntomas remiten con levotiroxina",
+          "tratamiento": "Levotiroxina, seguimiento TSH",
+          "especialidad_1": "Endocrinología",
+          "especialidad_2": "Medicina Interna"
+        }
+      ]
+    }
   }
 ]

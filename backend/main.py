@@ -12,7 +12,12 @@ from PIL import Image
 from io import BytesIO
 import torch
 import re
+from typing import List
 import httpx
+import pytz
+from datetime import datetime
+from transformers import pipeline
+import time
 
 # ========== Carga modelo de embeddings ==========
 model_st = SentenceTransformer('all-MiniLM-L6-v2')
@@ -59,50 +64,157 @@ def cargar_modelo_local():
         except Exception as e:
             print("No se pudo cargar el modelo local:", str(e))
 
-# ========== Procesamiento de respuesta markdown ==========
-def parsear_respuesta_medgemma_markdown(respuesta):
-    diagnostico = re.search(r"1\.\s+\*\*Diagn[oó]stico probable:\*\*\s*(.*)", respuesta, re.IGNORECASE)
-    explicacion = re.search(r"2\.\s+\*\*Explicaci[oó]n:\*\*\s*(.*)", respuesta, re.IGNORECASE)
-    especialidad = re.search(r"3\.\s+\*\*Especialidad m[eé]dica recomendada:\*\*\s*(.*)", respuesta, re.IGNORECASE)
-    preguntas = re.search(r"4\.\s+\*\*Preguntas que deber[ií]a hacer el m[eé]dico en consulta:\*\*\s*([\s\S]*)", respuesta, re.IGNORECASE)
+# ========== Procesamiento de limpiar respuestas ==========
+def limpiar_bloque(texto):
+    if not texto:
+        return ""
+    texto = re.sub(r'^[*\-\s]+', '', texto, flags=re.MULTILINE)
+    texto = re.sub(r':\*\*', '', texto)
+    texto = texto.replace('\n', ' ').strip()
+    return texto
 
-    preguntas_texto = ""
-    if preguntas and preguntas.group(1):
-        preguntas_list = re.findall(r"[*-]\s*(.*)", preguntas.group(1))
-        if preguntas_list:
-            preguntas_texto = " ".join([q.strip() for q in preguntas_list])
-        else:
-            preguntas_texto = preguntas.group(1).strip()
+# ========== Procesamiento de respuesta individual imagen ==========
+def parsear_informe_radiologico(descripcion):
+    # Variantes: con o sin asteriscos, minúsculas/mayúsculas, etc.
+    patt_hallazgos = r'(\*\*)?\s*hallazgos principales\s*:?(\*\*)?\s*([\s\S]*?)(\*\*diagn[oó]stico probable\s*:?\*\*|diagn[oó]stico probable\s*:|$)'
+    patt_diagnostico = r'(\*\*)?\s*diagn[oó]stico probable\s*:?(\*\*)?\s*([\s\S]*?)(\*\*discusi[oó]n|discusi[oó]n|$)'
+
+    hallazgos = re.search(patt_hallazgos, descripcion, re.IGNORECASE)
+    diagnostico = re.search(patt_diagnostico, descripcion, re.IGNORECASE)
+
+    hallazgos_text = limpiar_bloque(hallazgos.group(3)) if hallazgos else ""
+    diagnostico_text = limpiar_bloque(diagnostico.group(3)) if diagnostico else ""
+
+    if not hallazgos_text and not diagnostico_text:
+        return {
+            "hallazgos_principales": "",
+            "diagnostico_probable": "",
+            "texto_bruto": descripcion
+        }
 
     return {
-        "diagnostico_probable": diagnostico.group(1).strip() if diagnostico else "",
-        "explicacion": explicacion.group(1).strip() if explicacion else "",
-        "especialidad_recomendada": especialidad.group(1).strip() if especialidad else "",
+        "hallazgos_principales": hallazgos_text,
+        "diagnostico_probable": diagnostico_text,
+    }
+
+# ========== Procesamiento de respuesta final imagen ==========
+import re
+
+def parsear_diagnostico_global(texto):
+    """
+    Extrae el ÚLTIMO bloque 'Hallazgo final' y 'Diagnóstico global' del texto generado por el modelo.
+    Si no encuentra, devuelve los textos entre corchetes.
+    """
+    patron = r"Hallazgo final: ?(.+?)\s*Diagnóstico global: ?(.+?)(?:\n|$)"
+    matches = list(re.finditer(patron, texto, re.DOTALL))
+    if matches:
+        # Tomar el último bloque (el real, después del ejemplo)
+        ultimo = matches[-1]
+        hallazgo = ultimo.group(1).strip()
+        diagnostico = ultimo.group(2).strip()
+    else:
+        hallazgo = "[Resumen de los hallazgos de todas las imágenes]"
+        diagnostico = "[Diagnóstico integrador, justifica brevemente la hipótesis y posibles diagnósticos diferenciales]"
+    return {
+        "hallazgo_final": hallazgo,
+        "diagnostico_global": diagnostico
+    }
+    
+# ========== Procesamiento de respuesta markdown ==========
+def parsear_respuesta_medgemma_markdown(respuesta):
+    # Busca TODAS las ocurrencias del bloque de diagnóstico
+    bloques = list(re.finditer(
+        r"1\.\s+\*\*Diagn[oó]stico probable:\*\*\s*(.*?)\s*"
+        r"2\.\s+\*\*Explicaci[oó]n:\*\*\s*(.*?)\s*"
+        r"3\.\s+\*\*Especialidad m[eé]dica recomendada:\*\*\s*(.*?)\s*"
+        r"4\.\s+\*\*Preguntas que deber[ií]a hacer el m[eé]dico en consulta:\*\*\s*([\s\S]*?)(?=\n\d\.|\Z)",
+        respuesta, re.IGNORECASE | re.DOTALL
+    ))
+
+    if not bloques:
+        return {
+            "diagnostico_probable": "",
+            "explicacion": "",
+            "especialidad_recomendada": "",
+            "preguntas_consulta": ""
+        }
+
+    # Selecciona el SEGUNDO bloque si existe, sino el primero
+    match = bloques[1] if len(bloques) > 1 else bloques[0]
+    diagnostico = match.group(1).strip()
+    explicacion = match.group(2).strip()
+    especialidad = match.group(3).strip()
+    preguntas_raw = match.group(4).strip()
+
+    preguntas_list = re.findall(r"[*-]\s*(.*)", preguntas_raw)
+    preguntas_list = [q.strip() for q in preguntas_list if q.strip()][:5]
+    if len(preguntas_list) < 3 and preguntas_raw:
+        # Intenta dividir por salto de línea o punto y coma si no hay guiones
+        extra = re.split(r'[\n;]+', preguntas_raw)
+        preguntas_list += [q.strip() for q in extra if q.strip()]
+        preguntas_list = preguntas_list[:5]
+    preguntas_texto = " | ".join(preguntas_list)
+
+    return {
+        "diagnostico_probable": diagnostico,
+        "explicacion": explicacion,
+        "especialidad_recomendada": especialidad,
         "preguntas_consulta": preguntas_texto
     }
 
-# ========== Consulta a LLM ==========
+# ========== Verifica si estamos en horario de nube ==========
+def en_horario_nube():
+    hora_actual = datetime.now().hour
+    return True
+    # return 7 <= hora_actual < 00
+
+# ========== Consulta a LLM usando nube con fallback ==========
 def consulta_llm(prompt, max_new_tokens=256, usar_nube=True):
-    if usar_nube:
+    respuesta_final = ""
+    advertencia = ""
+    debug_msg = "[DEBUG-LLM]"
+
+    print(f"{debug_msg} Nuevo request:")
+    print(f"{debug_msg} usar_nube={usar_nube}, en_horario_nube={en_horario_nube()}")
+    print(f"{debug_msg} Prompt enviado (primeros 120 chars): {prompt[:120]}...")
+
+    if usar_nube and en_horario_nube():
+        inicio = time.time()
         try:
             response = httpx.post(
-                "http://35.208.119.20:8000/medgemma",
+                "http://35.215.215.214:8000/medgemma",
                 json={"texto": prompt},
-                timeout=120
+                timeout=None
             )
+            t_total = time.time() - inicio
+            print(f"{debug_msg} [NUBE] status_code={response.status_code} tiempo={t_total:.2f}s")
+
             if response.status_code == 200:
+                print(f"{debug_msg} [NUBE] Respuesta OK, devolviendo resultado.")
                 return response.json()["respuesta"]
             else:
-                raise Exception("Respuesta inválida desde la nube")
+                print(f"{debug_msg} [NUBE] Error HTTP status {response.status_code}. Activando fallback local.")
+                raise Exception(f"Respuesta inválida desde la nube. Status: {response.status_code}")
         except Exception as e:
-            print("Fallo en nube, usando modelo local:", str(e))
+            t_total = time.time() - inicio
+            print(f"{debug_msg} [NUBE] EXCEPCIÓN o TIMEOUT tras {t_total:.2f}s: {e}")
+            advertencia = f"⚠️ No se pudo usar la nube: {e}. Usando modelo local como respaldo."
+    elif usar_nube and not en_horario_nube():
+        print(f"{debug_msg} [LOCAL] Fuera de horario de nube, usando local.")
+        advertencia = "ℹ️ Estás fuera del horario permitido para el uso de la nube (7:00 a.m. - 11:00 p.m.). Usando modelo local."
 
+    print(f"{debug_msg} [LOCAL] Usando modelo local realmente.")
     if not modelo_local_cargado:
         cargar_modelo_local()
-
     inputs = tokenizer_local(prompt, return_tensors="pt")
     outputs = modelo_local.generate(**inputs, max_new_tokens=max_new_tokens)
-    return tokenizer_local.decode(outputs[0], skip_special_tokens=True)
+    respuesta_final = tokenizer_local.decode(outputs[0], skip_special_tokens=True)
+
+    if advertencia:
+        respuesta_final = f"{advertencia}\n\n{respuesta_final}"
+
+    print(f"{debug_msg} [LOCAL] Respuesta local generada OK.")
+    return respuesta_final
 
 # ========== Endpoints ==========
 @app.post("/buscar")
@@ -140,12 +252,15 @@ def buscar_casos_texto(consulta: ConsultaTexto):
 
 @app.post("/diagnostico_inteligente")
 def diagnostico_inteligente(consulta: ConsultaTexto, usar_nube: bool = Query(True)):
+    inicio = time.time()
     try:
+        # 1. Embedding y similitud
         consulta_emb = model_st.encode([consulta.texto])[0]
         sims = cosine_similarity([consulta_emb], embeddings)[0]
         top_idx = np.argsort(sims)[::-1][:3]
         casos_similares = df.iloc[top_idx]
 
+        # 2. Construcción del prompt con casos similares
         prompt = (
             f"Paciente: {consulta.texto}\n"
             "A continuación, se muestran algunos casos clínicos similares:\n"
@@ -156,17 +271,24 @@ def diagnostico_inteligente(consulta: ConsultaTexto, usar_nube: bool = Query(Tru
                 f"Historia actual: {row['historia_actual']}. "
                 f"Diagnóstico: {row['diagnostico']}.\n"
             )
-
+        
+        # 3. Indicaciones y formato para el modelo (fuera del for)
         prompt += (
-            "\nCon base en esta información, responde las siguientes preguntas en español:\n"
-            "1. ¿Cuál es el diagnóstico probable?\n"
-            "2. Explica brevemente por qué.\n"
-            "3. ¿Qué especialidad médica se recomienda?\n"
-            "4. ¿Qué preguntas debería hacer el médico en consulta?\n"
+            "\nCon base en esta información, responde SOLO en español y usando EXACTAMENTE el siguiente formato:\n"
+            "1. **Diagnóstico probable:**\n"
+            "2. **Explicación:**\n"
+            "3. **Especialidad médica recomendada:**\n"
+            "4. **Preguntas que debería hacer el médico en consulta:**\n"
+            "- Pregunta 1\n"
+            "Las preguntas deber ser diferentes, concisas y que sean 5, no más"
+            
         )
 
+        # 4. Enviar prompt al modelo (nube o local)
         respuesta = consulta_llm(prompt, usar_nube=usar_nube)
         print("DEBUG RESPUESTA:", respuesta)
+        t_total = time.time() - inicio
+        print(f"[TIEMPO] /diagnostico_inteligente: {t_total:.2f} segundos")
         return parsear_respuesta_medgemma_markdown(respuesta)
     except Exception as e:
         import traceback
@@ -200,44 +322,133 @@ async def obtener_resultados():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# ========== NUEVO: Diagnóstico basado en imagen ==========
+# ========== Diagnóstico basado en imagen ==========
 @app.post("/diagnostico_imagen")
 async def diagnostico_por_imagen(files: List[UploadFile] = File(...)):
+    import time
+    inicio = time.time()
+    usar_nube = en_horario_nube()  # O puedes forzar True/False para pruebas
     try:
         if len(files) > 3:
             return JSONResponse(status_code=400, content={"error": "Máximo 3 imágenes permitidas"})
 
-        from transformers import pipeline
-        pipe = pipeline(
-            "image-text-to-text",
-            model="google/medgemma-4b-it",
-            torch_dtype=torch.bfloat16,
-            device="cuda",
+        results = []
+        informes_solo_texto = []
+
+        prompt_individual = (
+            "Analiza en español esta imagen médica y responde estrictamente en el siguiente formato, sin agregar texto extra:\n"
+            "Hallazgos principales: [Describe solo los hallazgos relevantes, como lesiones, anomalías, órganos afectados.]\n"
+            "Diagnóstico probable: [Hipótesis diagnóstica basada en los hallazgos, bien detallado. Sé tan detallado como lo permitan los hallazgos en la imagen, usando terminología médica precisa, pero no inventes información no visible.]"
         )
 
-        responses = []
-
         for file in files:
-            image = Image.open(BytesIO(await file.read()))
+            image_bytes = await file.read()
+            procesado_nube = False
+            descripcion = ""
+            informe_parseado = {}
 
-            messages = [
-                {
-                    "role": "system",
-                    "content": [{"type": "text", "text": "You are an expert radiologist."}]
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Describe this CT scan"},
-                        {"type": "image", "image": image}
+            # ========== Intento en la nube ==========
+            if usar_nube:
+                try:
+                    response = httpx.post(
+                        "http://35.215.215.214:8000/medgemma-img",
+                        files={'files': (file.filename, image_bytes, file.content_type)},
+                        data={'prompt': prompt_individual},
+                        timeout=300
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        if "resultados" in data and len(data["resultados"]) > 0 and "descripcion" in data["resultados"][0]:
+                            descripcion = data["resultados"][0]["descripcion"]
+                            informe_parseado = parsear_informe_radiologico(descripcion)
+                            informes_solo_texto.append(descripcion)
+                            procesado_nube = True
+                        else:
+                            descripcion = "⚠️ Respuesta de la nube con formato inesperado."
+                            informe_parseado = {}
+                            informes_solo_texto.append(descripcion)
+                            procesado_nube = True
+                        results.append({
+                            "imagen": file.filename,
+                            "descripcion": informe_parseado,
+                        })
+                    else:
+                        descripcion = f"Error HTTP {response.status_code}"
+                        informe_parseado = {}
+                except Exception as e:
+                    print("⚠️ Error usando la nube, usando modelo local. Excepción:", str(e))
+            
+            # ========== Fallback LOCAL ==========
+            if not procesado_nube:
+                try:
+                    device = "cuda" if torch.cuda.is_available() else "cpu"
+                    pipe = pipeline(
+                        "image-text-to-text",
+                        model="google/medgemma-4b-it",
+                        torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
+                        device=device,
+                    )
+                    messages = [
+                        {
+                            "role": "system",
+                            "content": [{"type": "text", "text": "Eres un radiólogo clínico experto. Responde en español y utiliza terminología médica adecuada."}]
+                        },
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt_individual},
+                                {"type": "image", "image": Image.open(BytesIO(image_bytes))}
+                            ]
+                        }
                     ]
-                }
-            ]
 
-            output = pipe(text=messages, max_new_tokens=300)
-            responses.append(output[0]["generated_text"][-1]["content"])
+                    output = pipe(text=messages, max_new_tokens=400)
+                    descripcion = output[0]["generated_text"][-1]["content"] if isinstance(output[0]["generated_text"], list) else output[0]["generated_text"]
+                    informe_parseado = parsear_informe_radiologico(descripcion)
+                    informes_solo_texto.append(descripcion)
+                    results.append({
+                        "imagen": file.filename,
+                        "descripcion": informe_parseado,
+                    })
+                except Exception as e:
+                    results.append({
+                        "imagen": file.filename,
+                        "descripcion": f"Error procesando imagen en modelo local: {str(e)}",
+                    })
 
-        return {"respuestas": responses}
+        # =========== Diagnóstico global ===========
+        diagnostico_global = None
+        if len(informes_solo_texto) > 1:
+            texto_informes = "\n\n".join([
+                f"Informe de la imagen {i+1}:\n{desc}" for i, desc in enumerate(informes_solo_texto)
+            ])
+            prompt_global = (
+                f"Se han analizado varias imágenes médicas, cada una con su informe individual:\n"
+                f"{texto_informes}\n\n"
+                "Como radiólogo clínico experto, integra todos los hallazgos y redacta un único informe resumen. "
+                "Responde exactamente así (NO repitas el formato):\n"
+                "Hallazgo final: [Resumen de los hallazgos de todas las imágenes]\n"
+                "Diagnóstico global: [Diagnóstico integrador, justifica brevemente la hipótesis y posibles diagnósticos diferenciales]"
+            )
+            try:
+                diagnostico_global = consulta_llm(prompt_global, usar_nube=usar_nube)
+                global_parseado = parsear_diagnostico_global(diagnostico_global)
+            except Exception as e:
+                diagnostico_global = f"Error al generar el diagnóstico global: {str(e)}"
+                global_parseado = {"hallazgo_final": "", "diagnostico_global": diagnostico_global}
+        else:
+            global_parseado = {}
+
+        t_total = time.time() - inicio
+        print(f"[TIEMPO] /diagnostico_imagen: {t_total:.2f} segundos")
+        print(results)
+        print(diagnostico_global)
+        return {
+            "resultados": results,
+            "hallazgo_final": global_parseado["hallazgo_final"],
+            "diagnostico_global": global_parseado["diagnostico_global"],
+            "diagnostico_global_raw": diagnostico_global
+        }
 
     except Exception as e:
         import traceback
