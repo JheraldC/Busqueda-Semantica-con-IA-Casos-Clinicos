@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-do
 import Formulario from "./Formulario";
 import Inicio from "./Inicio";
 import Resultado from "./Resultado";
+import ResultadoImagen from "./ResultadoImagenes";
 import { FaStethoscope } from "react-icons/fa";
 
 function App() {
@@ -88,6 +89,14 @@ function App() {
                 resultadosHistorial={resultadosHistorial}
                 error={error}
                 onSetResultadosHistorial={setResultadosHistorial}
+              />
+            }
+          />
+          <Route
+            path="/resultado-imagen/:id"
+            element={
+              <ResultadoImagen
+                resultadosHistorial={resultadosHistorial}
               />
             }
           />

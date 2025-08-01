@@ -32,6 +32,15 @@ export default function Inicio() {
             Basado en los casos clínicos más similares encontrados, el sistema generará un diagnóstico probable, una breve explicación, especialidad médica recomendada y preguntas clave para la consulta médica.
           </p>
         </div>
+
+        <div className="mb-4">
+          <h3 className="font-semibold text-purple-800 mb-1">Diagnóstico por Imágenes Médicas</h3>
+          <p className="text-gray-700">
+            El sistema analiza imágenes radiológicas usando inteligencia artificial para generar un diagnóstico probable,
+            acompañado de una explicación médica, la especialidad sugerida y preguntas clínicas relevantes para apoyar la toma de decisiones médicas.
+          </p>
+        </div>
+
       </div>
 
       <p className="mt-8 text-gray-700 max-w-2xl mx-auto">

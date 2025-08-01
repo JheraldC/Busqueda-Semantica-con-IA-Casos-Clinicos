@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 
 export default function Resultado({
@@ -238,6 +239,7 @@ export default function Resultado({
                 .map((resultado) => {
                     const fecha = new Date(resultado.timestamp).toLocaleString(); // Formato local
                     const esDiagnosticoInteligente = !!resultado.resultado?.diagnostico_probable;
+                    const esDiagnosticoImagen = resultado?.tipoConsulta === "diagnostico_imagen";
 
                     return (
                         <div
@@ -283,46 +285,66 @@ export default function Resultado({
                                     ) : (
                                         (resultado.resultado?.resultados || [])
                                             .filter(Boolean)
-                                            .map((item, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className="p-4 bg-indigo-50 rounded shadow-sm border border-indigo-200"
-                                                >
-                                                    <p>
-                                                        <strong className="text-indigo-700">Motivo:</strong>{" "}
-                                                        <span className="text-indigo-900">
-                                                            {item.motivo_consulta}
-                                                        </span>
-                                                    </p>
-                                                    <p>
-                                                        <strong className="text-indigo-700">Diagnóstico:</strong>{" "}
-                                                        <span className="text-indigo-800 font-semibold">
-                                                            {item.diagnostico}
-                                                        </span>
-                                                    </p>
-                                                    {item.historia_actual && (
+                                            .map((item, idx) =>
+                                                esDiagnosticoImagen ? (
+                                                    <div key={idx} className="p-4 bg-indigo-50 rounded shadow-sm border border-indigo-200">
+                                                        <div className="text-sm text-indigo-700 mb-1">
+                                                            Imagen: {item.imagen}
+                                                        </div>
+                                                        {item.descripcion?.hallazgos_principales && (
+                                                            <div>
+                                                                <strong>Hallazgos principales:</strong> {item.descripcion.hallazgos_principales}
+                                                            </div>
+                                                        )}
+                                                        {item.descripcion?.diagnostico_probable && (
+                                                            <div>
+                                                                <strong>Diagnóstico probable:</strong> {item.descripcion.diagnostico_probable}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div key={idx} className="p-4 bg-indigo-50 rounded shadow-sm border border-indigo-200">
                                                         <p>
-                                                            <strong className="text-indigo-700">
-                                                                Historia actual:
-                                                            </strong>{" "}
-                                                            <span className="italic text-indigo-600">
-                                                                {item.historia_actual}
-                                                            </span>
+                                                            <strong className="text-indigo-700">Motivo:</strong>{" "}
+                                                            <span className="text-indigo-900">{item.motivo_consulta}</span>
                                                         </p>
-                                                    )}
-                                                    {item.antecedentes && (
                                                         <p>
-                                                            <strong className="text-indigo-700">Antecedentes:</strong>{" "}
-                                                            <span className="text-indigo-600">
-                                                                {item.antecedentes}
-                                                            </span>
+                                                            <strong className="text-indigo-700">Diagnóstico:</strong>{" "}
+                                                            <span className="text-indigo-800 font-semibold">{item.diagnostico}</span>
                                                         </p>
-                                                    )}
-                                                </div>
-                                            ))
+                                                        {item.historia_actual && (
+                                                            <p>
+                                                                <strong className="text-indigo-700">Historia actual:</strong>{" "}
+                                                                <span className="italic text-indigo-600">{item.historia_actual}</span>
+                                                            </p>
+                                                        )}
+                                                        {item.antecedentes && (
+                                                            <p>
+                                                                <strong className="text-indigo-700">Antecedentes:</strong>{" "}
+                                                                <span className="text-indigo-600">{item.antecedentes}</span>
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )
+                                            )
+
                                     )}
+                                    {/* Mostrar Hallazgo final y Diagnóstico global solo si es diagnostico_imagen */}
+                                    {resultado.tipoConsulta === "diagnostico_imagen" && (
+                                        <div className="mt-4 p-4 bg-green-50 rounded shadow border border-green-200">
+                                            <div>
+                                                <strong>Hallazgo final:</strong>
+                                                <div>{resultado.resultado?.hallazgo_final || "No disponible"}</div>
+                                            </div>
+                                            <div className="mt-2">
+                                                <strong>Diagnóstico global:</strong>
+                                                <div>{resultado.resultado?.diagnostico_global || "No disponible"}</div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Botón IA solo para resultados tipo lista, no diagnóstico inteligente */}
-                                    {!esDiagnosticoInteligente && (
+                                    {!esDiagnosticoInteligente && resultado.tipoConsulta !== "diagnostico_imagen" && (
                                         <>
                                             <button
                                                 disabled={cargandoIA}
@@ -359,6 +381,17 @@ export default function Resultado({
                                                 })()
                                             )}
                                         </>
+                                    )}
+                                    {resultado.tipoConsulta === "diagnostico_imagen" && (
+                                        <div className="mt-6">
+                                            <Link
+                                                to={`/resultado-imagen/${resultado.id}`}
+                                                className="inline-block px-4 py-2 bg-indigo-700 hover:bg-indigo-900 text-white rounded font-semibold transition"
+                                            >
+                                                Comparar diagnóstico IA vs diagnóstico Real
+                                            </Link>
+
+                                        </div>
                                     )}
                                 </div>
                             )}

@@ -117,7 +117,12 @@ export default function Formulario({ onSetResultado, onSetError, onSetResultados
 
             onSetResultado(nuevoResultado);
             onSetError(null);
-            navigate(`/resultado/${nuevoResultado.id}`);
+            if (tipoConsulta === "diagnostico_imagen") {
+                navigate(`/resultado-imagen/${nuevoResultado.id}`);
+            } else {
+                navigate(`/resultado/${nuevoResultado.id}`);
+            }
+
 
         } catch (err) {
             clearTimeout(loadingTimeout.current);

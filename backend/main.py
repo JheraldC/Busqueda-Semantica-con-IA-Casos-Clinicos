@@ -47,6 +47,10 @@ class ConsultaSimple(BaseModel):
 class ConsultaTexto(BaseModel):
     texto: str
 
+class SimilitudOracionesRequest(BaseModel):
+    source_sentence: str
+    sentences: list[str]
+
 # ========== Modelo local de texto ==========
 modelo_local = None
 tokenizer_local = None
@@ -165,8 +169,7 @@ def parsear_respuesta_medgemma_markdown(respuesta):
 # ========== Verifica si estamos en horario de nube ==========
 def en_horario_nube():
     hora_actual = datetime.now().hour
-    return True
-    # return 7 <= hora_actual < 00
+    return 7 <= hora_actual < 18
 
 # ========== Consulta a LLM usando nube con fallback ==========
 def consulta_llm(prompt, max_new_tokens=256, usar_nube=True):
@@ -217,6 +220,34 @@ def consulta_llm(prompt, max_new_tokens=256, usar_nube=True):
     return respuesta_final
 
 # ========== Endpoints ==========
+
+@app.post("/guardarResultado")
+async def guardar_resultado(resultado: dict):
+    try:
+        if HISTORIAL_FILE.exists():
+            with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
+                historial = json.load(f)
+        else:
+            historial = []
+        historial.append(resultado)
+        with open(HISTORIAL_FILE, "w", encoding="utf-8") as f:
+            json.dump(historial, f, indent=2, ensure_ascii=False)
+        return {"mensaje": "Resultado guardado exitosamente"}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/resultados")
+async def obtener_resultados():
+    try:
+        if HISTORIAL_FILE.exists():
+            with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
+                historial = json.load(f)
+        else:
+            historial = []
+        return {"resultados": historial}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/buscar")
 def buscar_casos(consulta: ConsultaSimple):
     try:
@@ -249,79 +280,7 @@ def buscar_casos_texto(consulta: ConsultaTexto):
         import traceback
         print(traceback.format_exc())
         return {"error": str(e)}
-
-@app.post("/diagnostico_inteligente")
-def diagnostico_inteligente(consulta: ConsultaTexto, usar_nube: bool = Query(True)):
-    inicio = time.time()
-    try:
-        # 1. Embedding y similitud
-        consulta_emb = model_st.encode([consulta.texto])[0]
-        sims = cosine_similarity([consulta_emb], embeddings)[0]
-        top_idx = np.argsort(sims)[::-1][:3]
-        casos_similares = df.iloc[top_idx]
-
-        # 2. Construcción del prompt con casos similares
-        prompt = (
-            f"Paciente: {consulta.texto}\n"
-            "A continuación, se muestran algunos casos clínicos similares:\n"
-        )
-        for i, row in casos_similares.iterrows():
-            prompt += (
-                f"- Caso {i+1}: Motivo de consulta: {row['motivo_consulta']}. "
-                f"Historia actual: {row['historia_actual']}. "
-                f"Diagnóstico: {row['diagnostico']}.\n"
-            )
-        
-        # 3. Indicaciones y formato para el modelo (fuera del for)
-        prompt += (
-            "\nCon base en esta información, responde SOLO en español y usando EXACTAMENTE el siguiente formato:\n"
-            "1. **Diagnóstico probable:**\n"
-            "2. **Explicación:**\n"
-            "3. **Especialidad médica recomendada:**\n"
-            "4. **Preguntas que debería hacer el médico en consulta:**\n"
-            "- Pregunta 1\n"
-            "Las preguntas deber ser diferentes, concisas y que sean 5, no más"
-            
-        )
-
-        # 4. Enviar prompt al modelo (nube o local)
-        respuesta = consulta_llm(prompt, usar_nube=usar_nube)
-        print("DEBUG RESPUESTA:", respuesta)
-        t_total = time.time() - inicio
-        print(f"[TIEMPO] /diagnostico_inteligente: {t_total:.2f} segundos")
-        return parsear_respuesta_medgemma_markdown(respuesta)
-    except Exception as e:
-        import traceback
-        print(traceback.format_exc())
-        return {"error": str(e)}
-
-@app.post("/guardarResultado")
-async def guardar_resultado(resultado: dict):
-    try:
-        if HISTORIAL_FILE.exists():
-            with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
-                historial = json.load(f)
-        else:
-            historial = []
-        historial.append(resultado)
-        with open(HISTORIAL_FILE, "w", encoding="utf-8") as f:
-            json.dump(historial, f, indent=2, ensure_ascii=False)
-        return {"mensaje": "Resultado guardado exitosamente"}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-@app.get("/resultados")
-async def obtener_resultados():
-    try:
-        if HISTORIAL_FILE.exists():
-            with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
-                historial = json.load(f)
-        else:
-            historial = []
-        return {"resultados": historial}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
+    
 # ========== Diagnóstico basado en imagen ==========
 @app.post("/diagnostico_imagen")
 async def diagnostico_por_imagen(files: List[UploadFile] = File(...)):
@@ -437,7 +396,15 @@ async def diagnostico_por_imagen(files: List[UploadFile] = File(...)):
                 diagnostico_global = f"Error al generar el diagnóstico global: {str(e)}"
                 global_parseado = {"hallazgo_final": "", "diagnostico_global": diagnostico_global}
         else:
-            global_parseado = {}
+            descripcion = results[0]["descripcion"]
+            global_parseado = {
+                "hallazgo_final": descripcion.get("hallazgos_principales", ""),
+                "diagnostico_global": descripcion.get("diagnostico_probable", "")
+            }
+            diagnostico_global = (
+                f"Hallazgo final: {global_parseado['hallazgo_final']}\n\n"
+                f"Diagnóstico global: {global_parseado['diagnostico_global']}"
+            )
 
         t_total = time.time() - inicio
         print(f"[TIEMPO] /diagnostico_imagen: {t_total:.2f} segundos")
@@ -454,3 +421,73 @@ async def diagnostico_por_imagen(files: List[UploadFile] = File(...)):
         import traceback
         print(traceback.format_exc())
         return {"error": str(e)}
+    
+@app.post("/diagnostico_inteligente")
+def diagnostico_inteligente(consulta: ConsultaTexto, usar_nube: bool = Query(True)):
+    inicio = time.time()
+    try:
+        # 1. Embedding y similitud
+        consulta_emb = model_st.encode([consulta.texto])[0]
+        sims = cosine_similarity([consulta_emb], embeddings)[0]
+        top_idx = np.argsort(sims)[::-1][:3]
+        casos_similares = df.iloc[top_idx]
+
+        # 2. Construcción del prompt con casos similares
+        prompt = (
+            f"Paciente: {consulta.texto}\n"
+            "A continuación, se muestran algunos casos clínicos similares:\n"
+        )
+        for i, row in casos_similares.iterrows():
+            prompt += (
+                f"- Caso {i+1}: Motivo de consulta: {row['motivo_consulta']}. "
+                f"Historia actual: {row['historia_actual']}. "
+                f"Diagnóstico: {row['diagnostico']}.\n"
+            )
+        
+        # 3. Indicaciones y formato para el modelo (fuera del for)
+        prompt += (
+            "\nCon base en esta información ten atencion en lo dicho por el paciente en (Edad, Sexo, Peso, Síntomas, Antecedentes) o (Texto de consulta), responde SOLO en español y usando EXACTAMENTE el siguiente formato:\n"
+            "1. **Diagnóstico probable:**\n"
+            "2. **Explicación:**\n"
+            "3. **Especialidad médica recomendada:**\n"
+            "4. **Preguntas que debería hacer el médico en consulta:**\n"
+            "- Pregunta 1\n"
+            "Las preguntas deber ser diferentes, concisas y que sean 5, no más"
+            
+        )
+
+        # 4. Enviar prompt al modelo (nube o local)
+        respuesta = consulta_llm(prompt, usar_nube=usar_nube)
+        print("DEBUG RESPUESTA:", respuesta)
+        t_total = time.time() - inicio
+        print(f"[TIEMPO] /diagnostico_inteligente: {t_total:.2f} segundos")
+        return parsear_respuesta_medgemma_markdown(respuesta)
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"error": str(e)}
+
+@app.post("/similitud_oraciones")
+def similitud_oraciones(payload: SimilitudOracionesRequest):
+    """
+    Endpoint para calcular la similitud semántica entre una oración fuente y una lista de oraciones.
+    Devuelve scores de similitud en el rango [0, 1].
+    """
+    try:
+        # Puedes cambiar el modelo por uno multilingüe o biomédico si deseas
+        model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+        # model = SentenceTransformer('BAAI/bge-m3')  # Ejemplo de modelo multilingüe
+        # model = SentenceTransformer('PlanTL-GOB-ES/roberta-base-biomedical-clinical-es')  # Si lo quieres probar biomédico español
+
+        source_emb = model.encode(payload.source_sentence, convert_to_tensor=True)
+        targets_emb = model.encode(payload.sentences, convert_to_tensor=True)
+        from sentence_transformers import util
+        # Scores: mayor a 0.7 ≈ muy parecidos; 0.3-0.7 parecidos; <0.3 poco relacionados
+        scores = util.pytorch_cos_sim(source_emb, targets_emb)[0]
+        # Convertimos tensor a float por compatibilidad JSON
+        print([float(s) for s in scores])
+        return {"scores": [float(s) for s in scores]}
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"error": str(e)})
